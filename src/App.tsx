@@ -5,8 +5,8 @@ import { Settings, RefreshCw, Copy, Play, Pause, Music, ScrollText, AlertTriangl
 const DECK_DEF = [
   { n: 'Renardeau', t: 'R', c: 1 }, { n: 'Renard', t: 'R', c: 5 }, { n: 'Chef des renards', t: 'R', c: 1 }, { n: 'Traître', t: 'R', c: 1 },
   { n: 'Fantôme', t: 'F', c: 3 }, { n: 'Chef des fantômes', t: 'F', c: 1 },
-  { n: 'Chasseur de prime', t: 'S', c: 1 }, { n: 'Tueur à gage', t: 'S', c: 1 },
-  { n: 'Juge', t: 'I', c: 1 }, { n: 'Vagabond', t: 'I', c: 1 }, { n: 'Gentil homme', t: 'I', c: 1 }, { n: 'Guérisseur', t: 'I', c: 5 },
+  { n: 'Chasseur de primes', t: 'S', c: 1 }, { n: 'Tueur à gages', t: 'S', c: 1 },
+  { n: 'Juge', t: 'I', c: 1 }, { n: 'Vagabond', t: 'I', c: 1 }, { n: 'Gentilhomme', t: 'I', c: 1 }, { n: 'Guérisseur', t: 'I', c: 5 },
   { n: 'Enfant de la nature', t: 'I', c: 1 }, { n: 'Berserker', t: 'I', c: 1 }, { n: 'Super voyant', t: 'I', c: 1 },
   { n: 'Le Petit', t: 'I', c: 7 }, { n: 'Omniscient', t: 'I', c: 1 }, { n: 'Alchimiste', t: 'I', c: 1 }, { n: 'Parent', t: 'I', c: 1 },
   { n: 'Magicien', t: 'I', c: 1 }, { n: 'Protecteur', t: 'I', c: 1 }, { n: 'Sorcier de glace', t: 'I', c: 1 },
@@ -68,15 +68,15 @@ function generateGame(N: number, C: number) {
     if (!valid) continue;
 
     // Check dependencies
-    hasChasseur = pool.includes('Chasseur de prime');
-    hasTueur = pool.includes('Tueur à gage');
+    hasChasseur = pool.includes('Chasseur de primes');
+    hasTueur = pool.includes('Tueur à gages');
     
     if (hasChasseur) {
       if (!pool.includes('Chef des renards') && !take('Chef des renards')) valid = false;
       if (!pool.includes('Chef des fantômes') && !take('Chef des fantômes')) valid = false;
     }
     if (hasTueur) {
-      if (!pool.includes('Chasseur de prime') && !take('Chasseur de prime')) valid = false;
+      if (!pool.includes('Chasseur de primes') && !take('Chasseur de primes')) valid = false;
       if (!take('Protecteur')) valid = false;
       // Chasseur triggers Chefs
       if (!pool.includes('Chef des renards') && !take('Chef des renards')) valid = false;
@@ -127,8 +127,8 @@ function generateGame(N: number, C: number) {
     }
     
     // FIX: Enforce Tueur dependencies
-    if (pool.includes('Tueur à gage')) {
-      ['Chasseur de prime', 'Protecteur'].forEach(req => {
+    if (pool.includes('Tueur à gages')) {
+      ['Chasseur de primes', 'Protecteur'].forEach(req => {
         if (!pool.includes(req)) {
           const invIdx = inventory.indexOf(req);
           if (invIdx > -1) {
@@ -315,16 +315,16 @@ const CardBadge = ({ card, isPlaying, nightCount }: { card: string, isPlaying?: 
         
         let titles: string[] = [], msgs: string[] = [], winners: string[] = [];
 
-        const tueur = getBadge('Tueur à gage');
-        if (isDead('Chasseur de prime') && isDead('Protecteur') && tueur && !tueur.classList.contains('role-mort')) {
+        const tueur = getBadge('Tueur à gages');
+        if (isDead('Chasseur de primes') && isDead('Protecteur') && tueur && !tueur.classList.contains('role-mort')) {
           titles.push("TUEUR À GAGES");
           msgs.push("Le contrat est rempli !");
           winners.push(getPName(tueur.closest('.player-card')!));
         }
 
-        const chasseur = getBadge('Chasseur de prime');
+        const chasseur = getBadge('Chasseur de primes');
         if (isDead('Chef des renards') && isDead('Chef des fantômes') && chasseur && !chasseur.classList.contains('role-mort')) {
-          titles.push("CHASSEUR DE PRIME");
+          titles.push("CHASSEUR DE PRIMES");
           msgs.push("Les têtes des Chefs sont tombées !");
           winners.push(getPName(chasseur.closest('.player-card')!));
         }
@@ -1030,7 +1030,7 @@ export default function App() {
                 }} 
                 className="flex-1 bg-orange-700 hover:bg-orange-600 text-white py-3 rounded-xl font-bold uppercase tracking-wider shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                Commencer l'aventure
+                Confirmer
               </button>
             </div>
           </div>
