@@ -1,6 +1,6 @@
 import express from 'express';
 import dotenv from 'dotenv';
-import { GoogleGenerativeAI } from '@google/genai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import cors from 'cors';
 
 dotenv.config();
