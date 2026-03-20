@@ -43,6 +43,9 @@ export default async function handler(req, res) {
         res.status(200).json(jsonData);
     } catch (error) {
         console.error('Erreur Gemini:', error);
-        res.status(500).json({ error: "Erreur lors de la génération de l'IA" });
+        res.status(500).json({ 
+            error: "Erreur lors de la génération de l'IA", 
+            details: error.message || error.toString() 
+        });
     }
 }

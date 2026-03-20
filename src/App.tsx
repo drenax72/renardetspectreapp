@@ -447,10 +447,11 @@ export default function App() {
         setIsPlaying(false);
         setIsConfirmingStop(false);
       } else {
-        throw new Error("L'IA n'a pas répondu. Utilisation de la logique locale.");
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.details || "L'IA n'a pas répondu. Utilisation de la logique locale.");
       }
-    } catch (error) {
-      console.warn(error);
+    } catch (error: any) {
+      console.warn("API Fallback Triggered:", error.message);
       // Fallback sur la logique algorithmique locale
       const r = generateGame(N, C);
       if (r.err) {
