@@ -1,0 +1,20 @@
+{
+  "grabuge": {
+    "category": "grabuge",
+    "filename": "WhatsApp Video 2026-10-25 at 17.06.52 (2).mp4",
+    "url": "/api/sfx-audio/grabuge",
+    "exists": true
+  },
+  "renards": {
+    "category": "renards",
+    "filename": "Aggressive_wild_fox__#2-1792947189409.mp3",
+    "url": "/api/sfx-audio/renards",
+    "exists": true
+  },
+  "fantomes": {
+    "category": "fantomes",
+    "filename": "Eerie_supernatural_g_#3-1792947087840.mp3",
+    "url": "/api/sfx-audio/fantomes",
+    "exists": true
+  }
+}
