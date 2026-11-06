@@ -1616,37 +1616,57 @@ export default function App() {
     return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
+  const isLoadingGameRef = useRef(false);
+  const initialLoadedDomStateRef = useRef<any>(null);
+
   const gameStateRef = useRef<any>(null);
   useEffect(() => {
     gameStateRef.current = { 
       isPlaying, gameId, res, gameName, N, C, nightCount, hasPlayedNight1, potions, 
       elapsedTime, gameHistory, isFinished, natureChildMaster, hasStolenMasterCard, natureChildPlayerId,
       elfDwarfUsed, superVoyantTarget, parentChildren, parentBondBroken,
-      berserkerEvent, berserkerStep
+      berserkerEvent, berserkerStep,
+      showNight, checkedRoles, nightPotionsUsed, tab,
+      natureChildMode, natureChildPopup, candidateMaster,
+      showParentModal, tempParentChildren, showSuperVoyantModal
     };
-  }, [isPlaying, gameId, res, gameName, N, C, nightCount, hasPlayedNight1, potions, elapsedTime, gameHistory, isFinished, natureChildMaster, hasStolenMasterCard, natureChildPlayerId, elfDwarfUsed, superVoyantTarget, parentChildren, parentBondBroken, berserkerEvent, berserkerStep]);
+  }, [
+    isPlaying, gameId, res, gameName, N, C, nightCount, hasPlayedNight1, potions, 
+    elapsedTime, gameHistory, isFinished, natureChildMaster, hasStolenMasterCard, natureChildPlayerId, 
+    elfDwarfUsed, superVoyantTarget, parentChildren, parentBondBroken, berserkerEvent, berserkerStep,
+    showNight, checkedRoles, nightPotionsUsed, tab,
+    natureChildMode, natureChildPopup, candidateMaster,
+    showParentModal, tempParentChildren, showSuperVoyantModal
+  ]);
 
   const saveCurrentGameRef = useRef(() => {});
   saveCurrentGameRef.current = () => {
     const state = gameStateRef.current;
     if (!state || !state.isPlaying || !state.gameId || !state.res) return;
     
-    const domState = state.res.map((p: any, i: number) => {
-      const pc = document.querySelectorAll('.player-card')[i];
-      if (!pc) return null;
-      
-      const isDead = pc.classList.contains('joueur-mort');
-      const rawAllegiance = pc.querySelector('.allegiance-text')?.textContent?.replace('Allégeance : ', '').trim() || p.allegiance;
-      const allegianceText = (!rawAllegiance || rawAllegiance === 'Déchu de Grabuge') ? p.allegiance : rawAllegiance;
-      
-      const cardsState = Array.from(pc.querySelectorAll('.role-badge')).map(badge => ({
-        isDead: badge.classList.contains('role-mort'),
-        isGhostKill: badge.classList.contains('tue-par-fantome'),
-        deathTurn: badge.getAttribute('data-death-turn')
-      }));
-      
-      return { isDead, allegiance: allegianceText, cardsState };
-    });
+    const pcs = document.querySelectorAll('.player-card');
+    let domState = state.domState || initialLoadedDomStateRef.current;
+    
+    // N'écraser domState que si le DOM est effectivement monté et que le chargement initial est terminé
+    if (pcs.length > 0 && !isLoadingGameRef.current) {
+      domState = state.res.map((p: any, i: number) => {
+        const pc = pcs[i];
+        if (!pc) return null;
+        
+        const isDead = pc.classList.contains('joueur-mort');
+        const rawAllegiance = pc.querySelector('.allegiance-text')?.textContent?.replace('Allégeance : ', '').trim() || p.allegiance;
+        const allegianceText = (!rawAllegiance || rawAllegiance === 'Déchu de Grabuge') ? p.allegiance : rawAllegiance;
+        
+        const cardsState = Array.from(pc.querySelectorAll('.role-badge')).map(badge => ({
+          isDead: badge.classList.contains('role-mort'),
+          isGhostKill: badge.classList.contains('tue-par-fantome'),
+          deathTurn: badge.getAttribute('data-death-turn')
+        }));
+        
+        return { isDead, allegiance: allegianceText, cardsState };
+      });
+      initialLoadedDomStateRef.current = domState;
+    }
 
     try {
       let games: any[] = [];
@@ -1686,7 +1706,18 @@ export default function App() {
           parentChildren: state.parentChildren || [],
           parentBondBroken: state.parentBondBroken || false,
           berserkerEvent: state.berserkerEvent || null,
-          berserkerStep: state.berserkerStep || null
+          berserkerStep: state.berserkerStep || null,
+          // Préservation complète de la nuit et de la progression
+          showNight: Boolean(state.showNight),
+          checkedRoles: Array.isArray(state.checkedRoles) ? state.checkedRoles : [],
+          nightPotionsUsed: state.nightPotionsUsed || { heal: false, death: false },
+          tab: state.tab || 'ordre',
+          natureChildMode: state.natureChildMode || null,
+          natureChildPopup: state.natureChildPopup || null,
+          candidateMaster: state.candidateMaster || null,
+          showParentModal: Boolean(state.showParentModal),
+          tempParentChildren: Array.isArray(state.tempParentChildren) ? state.tempParentChildren : [],
+          showSuperVoyantModal: Boolean(state.showSuperVoyantModal)
         }
       };
 
@@ -1708,6 +1739,13 @@ export default function App() {
     }
   };
 
+  // Sauvegarde immédiate lors de tout changement d'état de nuit, de rôles appelés ou de potions
+  useEffect(() => {
+    if (isPlaying && gameId) {
+      saveCurrentGameRef.current();
+    }
+  }, [showNight, checkedRoles, nightPotionsUsed, potions, nightCount, hasPlayedNight1, tab]);
+
   const handleGameEndRef = useRef<() => void>(() => {});
   handleGameEndRef.current = () => {
     saveCurrentGameRef.current();
@@ -1722,6 +1760,8 @@ export default function App() {
     setNightCount(1);
     setHasPlayedNight1(false);
     setCheckedRoles([]);
+    setShowNight(false);
+    setNightPotionsUsed({ heal: false, death: false });
     setNatureChildPlayerId(null);
     setNatureChildMaster(null);
     setHasStolenMasterCard(false);
@@ -2307,6 +2347,9 @@ export default function App() {
   }, [tab]);
 
   const loadGame = (game: any) => {
+    isLoadingGameRef.current = true;
+    initialLoadedDomStateRef.current = game.state?.domState || null;
+
     setGameId(game.id);
     setGameName(game.name);
     setN(game.state.N);
@@ -2327,9 +2370,9 @@ export default function App() {
     setNatureChildPlayerId(game.state.natureChildPlayerId || game.state.res?.find((p: any) => p.cards.includes('Enfant de la nature'))?.id || null);
     setNatureChildMaster(game.state.natureChildMaster || null);
     setHasStolenMasterCard(game.state.hasStolenMasterCard || false);
-    setNatureChildMode(null);
-    setNatureChildPopup(null);
-    setCandidateMaster(null);
+    setNatureChildMode(game.state.natureChildMode || null);
+    setNatureChildPopup(game.state.natureChildPopup || null);
+    setCandidateMaster(game.state.candidateMaster || null);
     setSelectedChildCard(null);
     setSelectedMasterCard(null);
     setPendingChildCard(null);
@@ -2339,12 +2382,13 @@ export default function App() {
     setElfDwarfUsed(game.state.elfDwarfUsed || false);
     elfDwarfUsedRef.current = game.state.elfDwarfUsed || false;
     setSuperVoyantTarget(game.state.superVoyantTarget || null);
-    setShowSuperVoyantModal(false);
+    setShowSuperVoyantModal(Boolean(game.state.showSuperVoyantModal));
     setParentChildren(game.state.parentChildren || []);
     parentChildrenRef.current = game.state.parentChildren || [];
+    setTempParentChildren(Array.isArray(game.state.tempParentChildren) ? game.state.tempParentChildren : []);
+    setShowParentModal(Boolean(game.state.showParentModal));
     setParentBondBroken(game.state.parentBondBroken || false);
     parentBondBrokenRef.current = game.state.parentBondBroken || false;
-    setShowParentModal(false);
     setPendingParentTargetLoss(null);
     setForcedParentCardLossChild(null);
     setBerserkerEvent(game.state?.berserkerEvent || null);
@@ -2354,13 +2398,20 @@ export default function App() {
     setBerserkerWrongCardToast(null);
     setHasPendingVictory(false);
     setPendingVictoryTitles([]);
+
+    // Restauration fidèle de l'état de la nuit
+    setShowNight(Boolean(game.state.showNight));
+    setCheckedRoles(Array.isArray(game.state.checkedRoles) ? game.state.checkedRoles : []);
+    setNightPotionsUsed(game.state.nightPotionsUsed || { heal: false, death: false });
+
     setIsPlaying(true);
-    setTab('ordre');
+    setTab(game.state.tab || 'ordre');
     setIsSidebarOpen(false);
     
-    setTimeout(() => {
+    const applyDomState = () => {
       if (!game.state.domState) return;
       const pcs = document.querySelectorAll('.player-card');
+      if (pcs.length === 0) return;
       game.state.domState.forEach((pState: any, i: number) => {
         const pc = pcs[i];
         if (!pc || !pState) return;
@@ -2385,7 +2436,12 @@ export default function App() {
           });
         }
       });
-    }, 500);
+      isLoadingGameRef.current = false;
+    };
+
+    setTimeout(applyDomState, 50);
+    setTimeout(applyDomState, 150);
+    setTimeout(applyDomState, 400);
   };
 
   const gen = (customCounts?: Record<string, number> | React.MouseEvent) => {
@@ -2414,6 +2470,8 @@ export default function App() {
       setNightCount(1);
       setHasPlayedNight1(false);
       setCheckedRoles([]);
+      setShowNight(false);
+      setNightPotionsUsed({ heal: false, death: false });
       const childP = r.players.find((p: any) => p.cards.includes('Enfant de la nature'));
       setNatureChildPlayerId(childP ? childP.id : null);
       setNatureChildMaster(null);
@@ -3256,7 +3314,7 @@ export default function App() {
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                       <h2 className="text-2xl font-bold text-gray-100 drop-shadow-lg">{gameName || "Le Cercle"}</h2>
                       <div className="grid grid-cols-2 gap-[10px] w-full">
-                        <button onClick={() => { setRes(null); setElapsedTime(0); setGameHistory([]); setPotions({ heal: 2, death: 2 }); setNightPotionsUsed({ heal: false, death: false }); setNightCount(1); setHasPlayedNight1(false); setCheckedRoles([]); setGentlemanGiver(null); setGentlemanStep(null); setCandidateGentlemanTarget(null); setExtraLifeBlockedPlayer(null); setElfDwarfEvent(null); setParentChildren([]); setParentBondBroken(false); setShowParentModal(false); setPendingParentTargetLoss(null); setForcedParentCardLossChild(null); }} className="flex items-center justify-center gap-2 bg-neutral-900 px-4 py-3 rounded-xl border border-neutral-800 hover:bg-neutral-800 text-gray-300 hover:text-white transition-colors shadow-md"><Settings size={18} /> Config</button>
+                        <button onClick={() => { setRes(null); setElapsedTime(0); setGameHistory([]); setPotions({ heal: 2, death: 2 }); setNightPotionsUsed({ heal: false, death: false }); setNightCount(1); setHasPlayedNight1(false); setShowNight(false); setCheckedRoles([]); setGentlemanGiver(null); setGentlemanStep(null); setCandidateGentlemanTarget(null); setExtraLifeBlockedPlayer(null); setElfDwarfEvent(null); setParentChildren([]); setParentBondBroken(false); setShowParentModal(false); setPendingParentTargetLoss(null); setForcedParentCardLossChild(null); }} className="flex items-center justify-center gap-2 bg-neutral-900 px-4 py-3 rounded-xl border border-neutral-800 hover:bg-neutral-800 text-gray-300 hover:text-white transition-colors shadow-md"><Settings size={18} /> Config</button>
                         <button onClick={gen} className="flex items-center justify-center gap-2 bg-neutral-800 px-4 py-3 rounded-xl border border-neutral-700 text-white hover:bg-neutral-700 transition-colors shadow-lg"><RefreshCw size={18} /> Relancer</button>
                         <button onClick={() => setIsEditing(!isEditing)} className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-all border ${isEditing ? 'bg-green-900/30 text-green-200 border-green-800' : 'bg-neutral-900 text-gray-300 border-neutral-800 hover:bg-neutral-800'}`}>
                           {isEditing ? <Check size={18} /> : <UserPen size={18} />}
@@ -3516,7 +3574,7 @@ export default function App() {
                         <button onClick={() => setIsConfirmingStop(true)} className="w-full bg-red-950/30 border border-red-900/50 text-red-200 py-4 rounded-xl hover:bg-red-950/50 transition-colors font-bold uppercase tracking-wider shadow-lg font-serif">Arrêter la partie</button>
                       ) : (
                         <div className="flex gap-4">
-                          <button onClick={() => { saveCurrentGameRef.current(); setRes(null); setIsPlaying(false); setIsFinished(false); setIsConfirmingStop(false); setGameId(null); setElapsedTime(0); setGameHistory([]); setPotions({ heal: 2, death: 2 }); setNightCount(1); setHasPlayedNight1(false); setCheckedRoles([]); setShowGhostRitualModal(false); setReviveCandidate(null); setHasPendingVictory(false); setPendingVictoryTitles([]); }} className="flex-1 bg-red-900/80 text-white py-4 rounded-xl hover:bg-red-800 transition-colors font-bold uppercase tracking-wider border border-red-700 shadow-lg font-serif">Confirmer</button>
+                          <button onClick={() => { saveCurrentGameRef.current(); setRes(null); setIsPlaying(false); setIsFinished(false); setIsConfirmingStop(false); setGameId(null); setElapsedTime(0); setGameHistory([]); setPotions({ heal: 2, death: 2 }); setNightCount(1); setHasPlayedNight1(false); setShowNight(false); setCheckedRoles([]); setNightPotionsUsed({ heal: false, death: false }); setShowGhostRitualModal(false); setReviveCandidate(null); setHasPendingVictory(false); setPendingVictoryTitles([]); }} className="flex-1 bg-red-900/80 text-white py-4 rounded-xl hover:bg-red-800 transition-colors font-bold uppercase tracking-wider border border-red-700 shadow-lg font-serif">Confirmer</button>
                           <button onClick={() => setIsConfirmingStop(false)} className="flex-1 bg-neutral-800 text-gray-300 py-4 rounded-xl border border-neutral-700 hover:bg-neutral-700 transition-colors font-bold uppercase tracking-wider shadow-lg font-serif">Annuler</button>
                         </div>
                       )}
@@ -4614,6 +4672,9 @@ export default function App() {
                   setIsPlaying(true);
                   setNightCount(1);
                   setHasPlayedNight1(false);
+                  setShowNight(false);
+                  setCheckedRoles([]);
+                  setNightPotionsUsed({ heal: false, death: false });
                   setElapsedTime(0);
                   setGameHistory([]);
                   setParentChildren([]);
@@ -4646,6 +4707,9 @@ export default function App() {
                   setIsPlaying(true);
                   setNightCount(1);
                   setHasPlayedNight1(false);
+                  setShowNight(false);
+                  setCheckedRoles([]);
+                  setNightPotionsUsed({ heal: false, death: false });
                   setElapsedTime(0);
                   setGameHistory([]);
                   setParentChildren([]);
