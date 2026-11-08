@@ -821,32 +821,53 @@ const CardBadge: React.FC<{
       {showActions && (
         <div 
           onClick={(e) => e.stopPropagation()}
-          className="absolute -top-8 left-1/2 -translate-x-1/2 flex gap-1 bg-black/90 p-1 rounded-lg border border-gray-700 z-50 shadow-xl animate-in fade-in zoom-in duration-200"
+          className="absolute bottom-full mb-2.5 sm:mb-3 left-1/2 -translate-x-1/2 flex items-center gap-2 sm:gap-2.5 bg-neutral-950/95 p-1.5 sm:p-2 rounded-2xl border-2 border-neutral-700/90 z-50 shadow-2xl backdrop-blur-md whitespace-nowrap animate-in fade-in zoom-in duration-200 pointer-events-auto"
         >
           {isLifeCard ? (
             <>
               <button 
                 type="button" 
                 onClick={removeExtraLife} 
-                className="p-1 hover:bg-green-900/50 rounded-full text-green-400 transition-colors cursor-pointer" 
+                className="w-11 h-11 sm:w-[50px] sm:h-[50px] flex items-center justify-center hover:bg-emerald-950/90 active:bg-emerald-900 border border-emerald-700/50 hover:border-emerald-500 rounded-xl text-emerald-400 hover:text-emerald-300 transition-all hover:scale-110 active:scale-95 cursor-pointer shadow-md" 
                 title="Retirer la vie en plus (✅)"
               >
-                <Check size={14} />
+                <Check size={34} strokeWidth={2.8} />
               </button>
               <button 
                 type="button" 
                 onClick={(e) => { e.stopPropagation(); setShowActions(false); }} 
-                className="p-1 hover:bg-red-900/50 rounded-full text-red-400 transition-colors cursor-pointer" 
+                className="w-11 h-11 sm:w-[50px] sm:h-[50px] flex items-center justify-center hover:bg-rose-950/90 active:bg-rose-900 border border-rose-700/50 hover:border-rose-500 rounded-xl text-rose-400 hover:text-rose-300 transition-all hover:scale-110 active:scale-95 cursor-pointer shadow-md" 
                 title="Annuler (❌)"
               >
-                <X size={14} />
+                <X size={34} strokeWidth={2.8} />
               </button>
             </>
           ) : (
             <>
-              <button onClick={(e) => kill(e, true)} className="p-1 hover:bg-blue-900/50 rounded-full text-white text-xs leading-none flex items-center justify-center w-5 h-5" title="Éliminer par Rituel Fantôme (👻)">👻</button>
-              <button onClick={(e) => kill(e)} className="p-1 hover:bg-green-900/50 rounded-full text-green-400" title="Éliminer (✅)"><Check size={14} /></button>
-              <button onClick={(e) => { e.stopPropagation(); setShowActions(false); }} className="p-1 hover:bg-red-900/50 rounded-full text-red-400" title="Annuler"><X size={14} /></button>
+              <button 
+                type="button"
+                onClick={(e) => kill(e, true)} 
+                className="w-11 h-11 sm:w-[50px] sm:h-[50px] flex items-center justify-center hover:bg-cyan-950/90 active:bg-cyan-900 border border-cyan-700/50 hover:border-cyan-500 rounded-xl text-2xl sm:text-3xl leading-none transition-all hover:scale-110 active:scale-95 cursor-pointer shadow-md select-none" 
+                title="Éliminer par Rituel Fantôme (👻)"
+              >
+                👻
+              </button>
+              <button 
+                type="button"
+                onClick={(e) => kill(e)} 
+                className="w-11 h-11 sm:w-[50px] sm:h-[50px] flex items-center justify-center hover:bg-emerald-950/90 active:bg-emerald-900 border border-emerald-700/50 hover:border-emerald-500 rounded-xl text-emerald-400 hover:text-emerald-300 transition-all hover:scale-110 active:scale-95 cursor-pointer shadow-md" 
+                title="Éliminer (✅)"
+              >
+                <Check size={34} strokeWidth={2.8} />
+              </button>
+              <button 
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setShowActions(false); }} 
+                className="w-11 h-11 sm:w-[50px] sm:h-[50px] flex items-center justify-center hover:bg-rose-950/90 active:bg-rose-900 border border-rose-700/50 hover:border-rose-500 rounded-xl text-rose-400 hover:text-rose-300 transition-all hover:scale-110 active:scale-95 cursor-pointer shadow-md" 
+                title="Annuler"
+              >
+                <X size={34} strokeWidth={2.8} />
+              </button>
             </>
           )}
         </div>
@@ -854,7 +875,7 @@ const CardBadge: React.FC<{
       {showReviveActions && (
         <div 
           onClick={(e) => e.stopPropagation()} 
-          className="absolute -top-10 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-neutral-900 border-2 border-emerald-500/90 p-1 rounded-xl z-50 shadow-2xl whitespace-nowrap animate-in fade-in zoom-in duration-150"
+          className="absolute bottom-full mb-2.5 sm:mb-3 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-neutral-900 border-2 border-emerald-500/90 p-1.5 rounded-xl z-50 shadow-2xl whitespace-nowrap animate-in fade-in zoom-in duration-150"
         >
           <button 
             type="button" 
